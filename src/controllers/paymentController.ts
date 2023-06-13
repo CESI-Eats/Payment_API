@@ -1,6 +1,7 @@
 ﻿import { Request, Response } from 'express';
 import Payment from '../models/Payment';
 
+
 // Get all
 export const getAllPayments = async (req: Request, res: Response) => {
   try {
@@ -28,15 +29,20 @@ export const getPayment = async (req: Request, res: Response) => {
 };
 
 // Create
-export const createPayment = async (req: Request, res: Response) => {
-  const myModel = new Payment({
-    title: req.body.title,
-    description: req.body.description,
-    items: req.body.items
+export const createPayment = async (req: Request, res: Response,type: String) => {
+  const payment = new Payment({
+    _idIdentity: (req as any).identityId,
+    type: type,
+    amount: req.body.amount,
+    date: req.body.date,
+    mode: req.body.mode,
+    status: "pending",
   });
   try {
-    const newMyModel = await myModel.save();
-    res.status(201).json(newMyModel);
+    const pendingPayment = await payment.save();
+    payment.status = acceptPayment();
+    const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, { new: true });
+    res.status(201).json(newPayment);
   } catch (err) {
     const errMessage = err instanceof Error ? err.message : 'An error occurred';
     res.status(400).json({ message: errMessage });
@@ -64,3 +70,26 @@ export const deletePayment = async (req: Request, res: Response) => {
     res.status(500).json({ message: errMessage });
   }
 };
+
+// Pay a deliveryman
+export const payDeliveryman = async (req: Request, res: Response) => {
+    await createPayment(req, res, "debit")
+    // Request Account API to put deliveryman's kitty at 0
+};
+
+// Pay a restorer
+export const payRestorer = async (req: Request, res: Response) => {
+  await createPayment(req, res, "debit")
+  // Request Account API to put restorer's kitty at 0
+};
+
+function acceptPayment(): string {
+  const successChance = 0.8; // 80% chance of success
+  const randomValue = Math.random();
+
+  if (randomValue < successChance) {
+    return "Success";
+  } else {
+    return "Failed";
+  }
+}

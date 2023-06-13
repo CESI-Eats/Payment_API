@@ -10,5 +10,7 @@ router.get('/:id', authorize([IdentityType.TECHNICAL, IdentityType.SALES]), paym
 router.post('/', authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.USER]), paymentController.createPayment);
 router.put('/:id', authorize([IdentityType.TECHNICAL]), paymentController.updatePayment);
 router.delete('/:id', authorize([IdentityType.TECHNICAL, IdentityType.SALES]), paymentController.deletePayment);
-// Il manque une route pour payer du compte cesi vers les utilisateurs
+
+router.post("/paydeliveryman", authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.DELIVERYMAN]), paymentController.payDeliveryman)
+router.post("/payrestorer", authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.RESTORER]), paymentController.payRestorer)
 export default router;

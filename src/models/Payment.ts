@@ -1,19 +1,31 @@
 ﻿import mongoose from 'mongoose';
 
-// Define schema for myModel
+// Define schema for Payment model
 const PaymentSchema = new mongoose.Schema({
-  title: {
+  _idIdentity: {
+    type: [mongoose.Schema.Types.ObjectId],
+    required: true,
+  },
+  type: {// credit or debit
     type: String,
     required: true,
   },
-  description: {
-    type: String,
+  amount: {
+    type: Number,
     required: true,
   },
-  created_at: {
+  date: {
     type: Date,
-    default: Date.now
-  }
+    required: true,
+    default: Date.now,
+  },
+  mode: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+  },
 });
 
 // Export model
