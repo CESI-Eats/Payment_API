@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.get('/', authorize([IdentityType.TECHNICAL, IdentityType.SALES]), paymentController.getAllPayments);
 router.get('/:id', authorize([IdentityType.TECHNICAL, IdentityType.SALES]), paymentController.getPayment);
-router.post('/', authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.USER]), paymentController.createPayment);
-router.put('/:id', authorize([IdentityType.TECHNICAL]), paymentController.updatePayment);
-router.delete('/:id', authorize([IdentityType.TECHNICAL, IdentityType.SALES]), paymentController.deletePayment);
-// Il manque une route pour payer du compte cesi vers les utilisateurs
+router.post('/', authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.USER]), (req, res) => paymentController.createPayment(req, res, "credit"));
+
+router.post("/restorer/collect", authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.RESTORER]), paymentController.collectKittyRestorer)
+router.post("/deliveryman/collect", authorize([IdentityType.TECHNICAL, IdentityType.SALES, IdentityType.DELIVERYMAN]), paymentController.collectKittyDeliveryman)
 export default router;
