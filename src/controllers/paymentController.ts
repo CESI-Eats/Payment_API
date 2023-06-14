@@ -19,7 +19,7 @@ export const getPayment = async (req: Request, res: Response) => {
     try {
         const myModel = await Payment.findById(req.params.id);
         if (myModel == null) {
-            return res.status(404).json({message: 'Cannot find myModel'});
+            return res.status(404).json({message: 'Cannot find Payment'});
         }
         res.status(200).json(myModel);
     } catch (err) {
@@ -35,38 +35,17 @@ export const createPayment = async (req: Request, res: Response, type: String) =
         type: type,
         amount: req.body.amount,
         mode: req.body.mode,
-        status: "pending",
+        status: "Pending",
     });
     try {
         const pendingPayment = await payment.save();
         payment.status = acceptPayment();
         const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
         res.status(201).json(newPayment);
+        return payment.status
     } catch (err) {
         const errMessage = err instanceof Error ? err.message : 'An error occurred';
         res.status(400).json({message: errMessage});
-    }
-};
-
-// Update
-export const updatePayment = async (req: Request, res: Response) => {
-    try {
-        const updatedMyModel = await Payment.findByIdAndUpdate(req.params.id, req.body, {new: true});
-        res.status(200).json(updatedMyModel);
-    } catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'An error occurred';
-        res.status(400).json({message: errMessage});
-    }
-};
-
-// Delete
-export const deletePayment = async (req: Request, res: Response) => {
-    try {
-        await Payment.findByIdAndDelete(req.params.id);
-        res.status(200).json({message: 'MyModel deleted'});
-    } catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'An error occurred';
-        res.status(500).json({message: errMessage});
     }
 };
 
@@ -80,23 +59,30 @@ export const collectKittyDeliveryman = async (req: Request, res: Response) => {
 export const collectKittyRestorer = async (req: Request, res: Response) => {
     try {
         // Create a payment with debit operation
-        await createPayment(req, res, "debit");
-
-        // Request Account API to set restorer's kitty to 0
-        const accountApiUrl = 'http://localhost:3001/restorer/kitty'; // Remplacer par l'URL de l'API Account
-
-        const accountApiPayload = {
-            type: "debit"
-        };
-
-        // Envoyer la requête POST à l'API Account
-        const response = await axios.post(accountApiUrl, accountApiPayload, {
-            headers: {
-                Authorization: `Bearer ${(req as any).identityId}`
-            }
+        const payment = new Payment({
+            _idIdentity: (req as any).identityId,
+            type: "debit",
+            amount: req.body.amount,
+            mode: req.body.mode,
+            status: "Pending",
         });
+        const pendingPayment = await payment.save();
+        payment.status = acceptPayment();
+        const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
+        if (payment.status == "Success") {
+            // Request Account API to set restorer's kitty to 0
+            const accountApiUrl = (process.env.ACCOUNT_API_URI || "") + "/restorers/kitty/reset";
 
-        res.status(200).json(res);
+            const accountApiPayload = {
+                type: "debit"
+            };
+            let response = await axios.post(accountApiUrl, accountApiPayload, {
+                headers: {
+                    Authorization: `${(req as any).headers.authorization}`
+                }
+            });
+        }
+        res.status(200).json(newPayment);
     } catch (err) {
         const errMessage = err instanceof Error ? err.message : 'An error occurred';
         res.status(400).json({message: errMessage});

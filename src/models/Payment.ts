@@ -3,7 +3,7 @@
 // Define schema for Payment model
 const PaymentSchema = new mongoose.Schema({
   _idIdentity: {
-    type: [mongoose.Schema.Types.ObjectId],
+    type: String,
     required: true,
   },
   type: {// credit or debit
