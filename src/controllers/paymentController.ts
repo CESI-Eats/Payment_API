@@ -1,6 +1,7 @@
 ﻿import {Request, Response} from 'express';
 import Payment from '../models/Payment';
 import axios from 'axios';
+import { connectLapinou } from '../services/lapinouService';
 
 // Get all
 export const getAllPayments = async (req: Request, res: Response) => {
@@ -69,18 +70,27 @@ export const collectKittyRestorer = async (req: Request, res: Response) => {
         const pendingPayment = await payment.save();
         payment.status = acceptPayment();
         const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
+        
         if (payment.status == "Success") {
-            // Request Account API to set restorer's kitty to 0
-            const accountApiUrl = (process.env.ACCOUNT_API_URI || "") + "/restorers/kitty/reset";
+            const channel = await connectLapinou(process.env.LAPINOU_URI as string);
 
-            const accountApiPayload = {
-                type: "debit"
-            };
-            let response = await axios.post(accountApiUrl, accountApiPayload, {
-                headers: {
-                    Authorization: `${(req as any).headers.authorization}`
-                }
+            channel.sendToQueue('reset-restorer-kitty-payment', Buffer.from((req as any).identityId));
+            console.log("Sent message to reset-restorer-kitty-payment", (req as any).identityId);
+            channel.consume('reset-restorer-kitty-account', (data) => {
+                console.log("Received message from reset-restorer-kitty-account", data?.content.toString());
+                channel.ack(data as any);
             });
+            // // Request Account API to set restorer's kitty to 0
+            // const accountApiUrl = (process.env.ACCOUNT_API_URI || "") + "/restorers/kitty/reset";
+
+            // const accountApiPayload = {
+            //     type: "debit"
+            // };
+            // let response = await axios.post(accountApiUrl, accountApiPayload, {
+            //     headers: {
+            //         Authorization: `${(req as any).headers.authorization}`
+            //     }
+            // });
         }
         res.status(200).json(newPayment);
     } catch (err) {
