@@ -1,8 +1,7 @@
 {
-    "name": "myapi",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "name": "payment_api",
+    "version": "0.1.0",
+    "description": "Payment manager for cesi eats.",
     "scripts": {
         "swagger-autogen": "node swagger.js",
         "build": "vite build",
