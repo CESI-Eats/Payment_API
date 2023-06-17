@@ -2,7 +2,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import paymentRoutes from './routes/paymentRoutes';
-import { startConnection } from './services/lapinouService';
+import { connectLapinou } from './services/lapinouService';
 
 dotenv.config();
 const app = express();
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {res.status(200).json({ response: true });});
 app.use('/payment', paymentRoutes);
 app.use('/payment-doc', swaggerUi.serve, swaggerUi.setup(swaggerFile))
 
-startConnection()
+connectLapinou()
 
 // Start server
 const PORT = process.env.PORT || 3000;
