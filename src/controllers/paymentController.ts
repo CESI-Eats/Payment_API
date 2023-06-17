@@ -76,9 +76,13 @@ export const collectKittyRestorer = async (req: Request, res: Response) => {
         sendMessage({success: true, content: (req as any).identityId} as MessageLapinou, sendQueue)
         
         const message = await receiveOneMessage(receiveQueue);
-        res.status(200).json(message);
+        if (message.success) {
+            res.status(200).json(message);
+        }else{
+            res.status(500).json({message: "An error occurred while resetting restorer's kitty."});
+        }
     }else{
-        res.status(500).json({message: "An error occurred, payment failed"});
+        res.status(402).json({ message: 'Payment failed. Please check your payment information.' });
     }
 };
 
