@@ -1,6 +1,6 @@
 ﻿import {Request, Response, response} from 'express';
 import Payment from '../models/Payment';
-import { MessageLapinou, receiveMessage, sendMessage } from '../services/lapinouService';
+import { MessageLapinou, receiveOneMessage, sendMessage } from '../services/lapinouService';
 
 // Get all
 export const getAllPayments = async (req: Request, res: Response) => {
@@ -75,14 +75,8 @@ export const collectKittyRestorer = async (req: Request, res: Response) => {
     if (payment.status == "Success") {
         sendMessage({success: true, content: (req as any).identityId} as MessageLapinou, sendQueue)
         
-        receiveMessage(receiveQueue)
-            .then((data) => {
-                (data as MessageLapinou).success ? res.status(200).json(newPayment) : res.status(500).json({message: "An error occurred"});
-            })
-            .catch((error) => {
-                console.error('Error occurred while sending a message:', error);
-                res.status(500).json({message: error});
-                });
+        const message = await receiveOneMessage(receiveQueue);
+        res.status(200).json(message);
     }else{
         res.status(500).json({message: "An error occurred, payment failed"});
     }

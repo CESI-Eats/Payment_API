@@ -2,6 +2,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import paymentRoutes from './routes/paymentRoutes';
+import { startConnection } from './services/lapinouService';
 
 dotenv.config();
 const app = express();
@@ -20,6 +21,8 @@ const swaggerFile = require('../swagger_output.json')
 app.get('/', (req, res) => {res.status(200).json({ response: true });});
 app.use('/payment', paymentRoutes);
 app.use('/payment-doc', swaggerUi.serve, swaggerUi.setup(swaggerFile))
+
+startConnection()
 
 // Start server
 const PORT = process.env.PORT || 3000;
