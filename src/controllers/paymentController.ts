@@ -1,7 +1,6 @@
-﻿import {Request, Response} from 'express';
+﻿import {Request, Response, response} from 'express';
 import Payment from '../models/Payment';
-import axios from 'axios';
-import { connectLapinou } from '../services/lapinouService';
+import { MessageLapinou, receiveMessage, sendMessage } from '../services/lapinouService';
 
 // Get all
 export const getAllPayments = async (req: Request, res: Response) => {
@@ -58,44 +57,34 @@ export const collectKittyDeliveryman = async (req: Request, res: Response) => {
 
 // Pay a restorer
 export const collectKittyRestorer = async (req: Request, res: Response) => {
-    try {
-        // Create a payment with debit operation
-        const payment = new Payment({
-            _idIdentity: (req as any).identityId,
-            type: "debit",
-            amount: req.body.amount,
-            mode: req.body.mode,
-            status: "Pending",
-        });
-        const pendingPayment = await payment.save();
-        payment.status = acceptPayment();
-        const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
+    // Create a payment with debit operation
+    const payment = new Payment({
+        _idIdentity: (req as any).identityId,
+        type: "debit",
+        amount: req.body.amount,
+        mode: req.body.mode,
+        status: "Pending",
+    });
+    const pendingPayment = await payment.save();
+    payment.status = acceptPayment();
+    const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
+    
+    const sendQueue = 'reset-restorer-kitty-payment';
+    const receiveQueue = 'reset-restorer-kitty-account';
+
+    if (payment.status == "Success") {
+        sendMessage({success: true, content: (req as any).identityId} as MessageLapinou, sendQueue)
         
-        if (payment.status == "Success") {
-            const channel = await connectLapinou(process.env.LAPINOU_URI as string);
-
-            channel.sendToQueue('reset-restorer-kitty-payment', Buffer.from((req as any).identityId));
-            console.log("Sent message to reset-restorer-kitty-payment", (req as any).identityId);
-            channel.consume('reset-restorer-kitty-account', (data) => {
-                console.log("Received message from reset-restorer-kitty-account", data?.content.toString());
-                channel.ack(data as any);
-            });
-            // // Request Account API to set restorer's kitty to 0
-            // const accountApiUrl = (process.env.ACCOUNT_API_URI || "") + "/restorers/kitty/reset";
-
-            // const accountApiPayload = {
-            //     type: "debit"
-            // };
-            // let response = await axios.post(accountApiUrl, accountApiPayload, {
-            //     headers: {
-            //         Authorization: `${(req as any).headers.authorization}`
-            //     }
-            // });
-        }
-        res.status(200).json(newPayment);
-    } catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'An error occurred';
-        res.status(400).json({message: errMessage});
+        receiveMessage(receiveQueue)
+            .then((data) => {
+                (data as MessageLapinou).success ? res.status(200).json(newPayment) : res.status(500).json({message: "An error occurred"});
+            })
+            .catch((error) => {
+                console.error('Error occurred while sending a message:', error);
+                res.status(500).json({message: error});
+                });
+    }else{
+        res.status(500).json({message: "An error occurred, payment failed"});
     }
 };
 
