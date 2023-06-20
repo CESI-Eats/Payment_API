@@ -1,6 +1,6 @@
 ﻿import {Request, Response, response} from 'express';
 import Payment from '../models/Payment';
-import { MessageLapinou, receiveOneMessage, sendMessage } from '../services/lapinouService';
+import { MessageLapinou, sendMessage } from '../services/lapinouService';
 
 // Get all
 export const getAllPayments = async (req: Request, res: Response) => {
@@ -65,31 +65,6 @@ export const collectKittyRestorer = async (req: Request, res: Response) => {
         mode: req.body.mode,
         status: "Pending",
     });
-
-    try {
-        const pendingPayment = await payment.save();
-        payment.status = acceptPayment();
-        const newPayment = await Payment.findByIdAndUpdate(pendingPayment.id, payment, {new: true});
-        
-        const sendQueue = 'reset-restorer-kitty-payment';
-        const receiveQueue = 'reset-restorer-kitty-account';
-
-        if (payment.status == "Success") {
-            await sendMessage({success: true, content: (req as any).identityId} as MessageLapinou, sendQueue)
-            
-            const message = await receiveOneMessage(receiveQueue);
-            if (message.success) {
-                res.status(200).json(message);
-            }else{
-                res.status(500).json({message: "An error occurred while resetting restorer's kitty."});
-            }
-        }else{
-            res.status(402).json({ message: 'Payment failed. Please check your payment information.' });
-        }
-    }catch (err) {
-        const errMessage = err instanceof Error ? err.message : 'An error occurred';
-        res.status(500).json({message: errMessage});
-    }
 };
 
 function acceptPayment(): string {
