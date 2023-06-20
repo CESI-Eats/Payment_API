@@ -1,11 +1,15 @@
-import { create } from 'domain';
-import Payment from './models/Payment';
-import { MessageLapinou, sendMessage, connectLapinou, handleTopic, initExchange, initQueue } from './services/lapinouService';
-import { createRestorerExchange } from './exchanges/restorerExchange';
+import {connectLapinou} from './services/lapinouService';
+import {createRestorerExchange} from './exchanges/restorerExchange';
+import {createAllExchange} from "./exchanges/allExchange";
+import {createDeliveryManExchange} from "./exchanges/deliverymanExchange";
+import {createUserExchange} from "./exchanges/userExchange";
 
-export function initLapinou(){
+export function initLapinou() {
     connectLapinou().then(async () => {
-      createRestorerExchange();
+        createAllExchange();
+        createUserExchange();
+        createRestorerExchange();
+        createDeliveryManExchange();
     }).catch((err) => {
         console.error('Failed to connect to rabbitMQ');
     });
