@@ -15,13 +15,9 @@ mongoose.connect(process.env.MONGODB_URI as string, { useNewUrlParser: true, use
 // Set JSON format for HTTP requests
 app.use(express.json());
 
-const swaggerUi = require('swagger-ui-express')
-const swaggerFile = require('../swagger_output.json')
 // Create endpoint
 app.get('/', (req, res) => {res.status(200).json({ response: true });});
 app.use('/payment', paymentRoutes);
-app.use('/payment-doc', swaggerUi.serve, swaggerUi.setup(swaggerFile))
-
 initLapinou();
 
 // Start server

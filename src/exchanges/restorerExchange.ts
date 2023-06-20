@@ -1,5 +1,6 @@
 import Payment from "../models/Payment";
 import { MessageLapinou, handleTopic, initExchange, initQueue, sendMessage } from "../services/lapinouService";
+import {acceptPayment} from "../services/toolsService";
 
 export function createRestorerExchange() {
     initExchange('restorers').then(exchange => {
@@ -34,13 +35,3 @@ export function createRestorerExchange() {
     });
 }
 
-function acceptPayment(): string {
-    const successChance = 0.8; // 80% chance of success
-    const randomValue = Math.random();
-  
-    if (randomValue < successChance) {
-        return "Success";
-    } else {
-        return "Failed";
-    }
-  }
