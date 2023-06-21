@@ -2,8 +2,8 @@ import Payment from "../models/Payment";
 import {MessageLapinou, handleTopic, initExchange, initQueue, sendMessage} from "../services/lapinouService";
 import {acceptPayment} from "../services/toolsService";
 
-export function createUserExchange() {
-    initExchange('users').then(exchange => {
+export function createOrderingExchange() {
+    initExchange('ordering').then(exchange => {
         initQueue(exchange, 'create.payment').then(({queue, topic}) => {
             handleTopic(queue, topic, async (msg) => {
                 const message = msg.content as MessageLapinou;
@@ -28,10 +28,10 @@ export function createUserExchange() {
 
                     await sendMessage({
                         success: true,
-                        content: "Payment success",
+                        content: {id: payment._id},
                         correlationId: message.correlationId,
                         sender: 'payment'
-                    }, message.replyTo ?? '');
+                    } as MessageLapinou, message.replyTo ?? '');
                 } catch (err) {
                     const errMessage = err instanceof Error ? err.message : 'An error occurred';
                     await sendMessage({
