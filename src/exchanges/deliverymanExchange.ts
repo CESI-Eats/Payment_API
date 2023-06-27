@@ -1,5 +1,5 @@
 import Payment from "../models/Payment";
-import { MessageLapinou, handleTopic, initExchange, initQueue, sendMessage } from "../services/lapinouService";
+import { MessageLapinou, handleTopic, initExchange, initQueue, publishTopic, sendMessage } from "../services/lapinouService";
 import {acceptPayment} from "../services/toolsService";
 
 export function createDeliveryManExchange() {
@@ -24,6 +24,16 @@ export function createDeliveryManExchange() {
                     if (payment.status != "Success") {
                         throw new Error("Payment failed");
                     }
+
+                    const socketMessage : MessageLapinou = {
+                        success: true,
+                        content: {
+                            topic: 'payment.created',
+                            message: payment,
+                            ids: ["all"]
+                        }
+                    };
+                    await publishTopic('notifications', 'send.websocket', socketMessage);
 
                     await sendMessage({success: true, content: payment.status, correlationId: message.correlationId, sender: 'payment'}, message.replyTo??'');
                 } catch (err) {
