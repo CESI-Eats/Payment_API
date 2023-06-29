@@ -4,7 +4,7 @@ import {acceptPayment} from "../services/toolsService";
 
 export function createRestorerExchange() {
     initExchange('restorers').then(exchange => {
-        initQueue(exchange, 'collect.restorer.kitty').then(({queue, topic}) => {
+        initQueue(exchange, 'pay.restorer.kitty').then(({queue, topic}) => {
             handleTopic(queue, topic, async (msg) => {
                 const message = msg.content as MessageLapinou;
                 try {
