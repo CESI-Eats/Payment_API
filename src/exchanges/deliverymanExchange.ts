@@ -4,7 +4,7 @@ import {acceptPayment} from "../services/toolsService";
 
 export function createDeliveryManExchange() {
     initExchange('deliverymans').then(exchange => {
-        initQueue(exchange, 'collect.deliveryman.kitty').then(({queue, topic}) => {
+        initQueue(exchange, 'pay.deliveryman.kitty').then(({queue, topic}) => {
             handleTopic(queue, topic, async (msg) => {
                 const message = msg.content as MessageLapinou;
                 try {
